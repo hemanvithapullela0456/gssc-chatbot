@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { processPdfBuffer } from './pdfUtils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,12 +64,13 @@ export class LocalPdfProcessor {
     async _processFile(filePath) {
         try {
             const fileName = path.basename(filePath);
-            const loader = new PDFLoader(filePath, { splitPages: false });
-            const docs = await loader.load();
+            const buffer = await fs.readFile(filePath);
             
-            const text = docs.map(d => d.pageContent).join('\n');
-            const pages = docs.length;
+            console.log(`[local-pdf] Processing ${fileName}...`);
+            const { text, pages, method } = await processPdfBuffer(buffer, `local://${fileName}`);
             
+            console.log(`[local-pdf] ${fileName}: ${pages} pages, ${text.length} chars (via ${method})`);
+
             return {
                 url: `local://${fileName.replace(/\s+/g, '_')}`,
                 title: fileName.replace(/\.[^/.]+$/, "").replace(/_/g, ' '),
@@ -87,3 +88,4 @@ export class LocalPdfProcessor {
         }
     }
 }
+

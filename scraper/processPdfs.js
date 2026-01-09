@@ -106,6 +106,8 @@ function collectPdfCandidates(scrapedData) {
   return Array.from(candidates.values()).filter((entry) => !!entry.url);
 }
 
+import { extractPdfText, ocrPdfBuffer } from "./pdfUtils.js";
+
 async function downloadPdfBuffer(pdfUrl) {
   const response = await axios.get(pdfUrl, {
     responseType: "arraybuffer",
@@ -119,78 +121,6 @@ async function downloadPdfBuffer(pdfUrl) {
   return Buffer.from(response.data);
 }
 
-async function extractPdfText(buffer, pdfUrl = "") {
-  let text = "";
-  let pages = 0;
-  try {
-    const parsed = await pdfParse(buffer);
-    text = parsed.text || "";
-    pages = parsed.numpages || 0;
-  } catch (error) {
-    console.error(`[pdf] pdf-parse failed for ${pdfUrl}: ${error.message}`);
-  }
-
-  const needsOCR = !text || text.trim().length < 40;
-  return { text, pages, needsOCR };
-}
-
-async function ocrPdfBuffer(buffer, pdfUrl = "") {
-  const tmpBase = path.join(
-    __dirname,
-    `tmp_ocr_${Date.now()}_${Math.random().toString(16).slice(2)}`
-  );
-  const pdfPath = `${tmpBase}.pdf`;
-  const imgPath = `${tmpBase}-1.png`;
-  const txtPath = `${tmpBase}.txt`;
-
-  try {
-    await fs.writeFile(pdfPath, buffer);
-    await exec(`pdftoppm -f 1 -l 1 -png "${pdfPath}" "${tmpBase}"`);
-    await exec(`tesseract "${imgPath}" "${tmpBase}" -l eng`);
-    const ocrText = await fs.readFile(txtPath, "utf8");
-    return ocrText.trim();
-  } catch (error) {
-    console.error(`[pdf] Local OCR failed for ${pdfUrl}: ${error.message}`);
-    return "";
-  } finally {
-    const extraCandidates = [
-      pdfPath,
-      imgPath,
-      txtPath,
-      `${tmpBase}.log`,
-      `${tmpBase}.html`,
-      `${tmpBase}.hocr`,
-      `${tmpBase}.tsv`,
-      `${tmpBase}-1.ppm`,
-      `${tmpBase}.png`,
-    ];
-
-    for (const candidate of extraCandidates) {
-      try {
-        await fs.unlink(candidate);
-      } catch {
-        // best effort
-      }
-    }
-
-    try {
-      const tmpPrefix = path.basename(tmpBase);
-      const entries = await fs.readdir(__dirname);
-      for (const entry of entries) {
-        if (entry.startsWith(tmpPrefix)) {
-          const fullPath = path.join(__dirname, entry);
-          try {
-            await fs.unlink(fullPath);
-          } catch {
-            // best effort
-          }
-        }
-      }
-    } catch {
-      // ignore cleanup errors
-    }
-  }
-}
 
 function buildPdfDoc(helper, pdfUrl, pdfText, pdfPages, existingDoc, linkInfo) {
   const timestamp = new Date().toISOString();
