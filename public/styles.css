@@ -9,6 +9,8 @@ body {
     background: #f8f9fa;
     height: 100vh;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 /* Main Container */
@@ -39,24 +41,26 @@ body {
     gap: 24px;
 }
 
+/* LEFT LOGO - Bigger, no border */
 .logo-circle {
-    width: 85px;
-    height: 85px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    background: white;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border: 4px solid #FDB913;
+    border: none;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: none;
 }
 
 .logo-circle img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
 }
 
 .header-title {
@@ -86,12 +90,36 @@ body {
     gap: 24px;
 }
 
+/* RIGHT LOGO - Bigger, no border */
+.shibu-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: none;
+    flex-shrink: 0;
+    box-shadow: none;
+}
+
+.shibu-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 /* Chat Body */
 .chat-body {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     background: #f8f9fa;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Watermark Logo - More visible */
@@ -107,7 +135,7 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    opacity: 0.08;
+    opacity: 0.12;
     pointer-events: none;
     z-index: 0;
 }
@@ -241,6 +269,7 @@ body {
     flex: 1;
     padding: 32px;
     overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
     z-index: 1;
 }
@@ -263,12 +292,14 @@ body {
 }
 
 .bot-avatar {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid #FDB913;
     flex-shrink: 0;
     margin-bottom: 4px;
+    overflow: hidden;
+    background: white;
 }
 
 .bot-avatar img {
@@ -291,7 +322,7 @@ body {
 /* Bot messages - Semi-transparent white */
 .message.bot .message-bubble {
     border-radius: 12px 12px 12px 2px;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.7);
     color: #2d3748;
     border: 1px solid rgba(0, 111, 58, 0.1);
     backdrop-filter: blur(10px);
@@ -300,7 +331,7 @@ body {
 /* User messages - Semi-transparent green */
 .message.user .message-bubble {
     border-radius: 12px 12px 2px 12px;
-    background: rgba(0, 111, 58, 0.85);
+    background: rgba(0, 111, 58, 0.75);
     color: white;
     backdrop-filter: blur(10px);
 }
@@ -308,7 +339,6 @@ body {
 .typing-indicator {
     display: none;
     justify-content: flex-start;
-    margin-bottom: 16px;
     padding: 0 32px 0 72px;
     position: relative;
     z-index: 1;
@@ -436,7 +466,8 @@ body {
     stroke: white;
 }
 
-.message-bubble ul {
+.message-bubble ul,
+.message-bubble ol {
     margin: 12px 0;
     padding-left: 24px;
 }
@@ -463,13 +494,21 @@ body {
     color: white;
 }
 
+/* Bold text is now black instead of green */
 .message-bubble strong {
-    color: #006F3A;
+    color: #1a202c;
+    font-weight: 600;
 }
 
 .message.user .message-bubble strong {
     color: white;
     font-weight: 700;
+}
+
+.nested-item {
+    margin-left: 20px;
+    margin-top: 4px;
+    font-size: 14px;
 }
 
 @media (max-width: 768px) {
@@ -488,8 +527,8 @@ body {
 
     .logo-circle,
     .shibu-circle {
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
     }
 
     .messages-container {
@@ -517,91 +556,7 @@ body {
 
     .logo-circle,
     .shibu-circle {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
     }
-}
-
-.bot-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid #FDB913;
-    flex-shrink: 0;
-    margin-bottom: 4px;
-    overflow: hidden;
-    background: white;
-}
-/* More translucent messages */
-.message.bot .message-bubble {
-    background: rgba(255, 255, 255, 0.7);
-}
-
-.message.user .message-bubble {
-    background: rgba(0, 111, 58, 0.75);
-}
-
-/* More visible watermark */
-.chat-body::before {
-    opacity: 0.12;
-}
-
-/* Typing indicator - no margin */
-.typing-indicator {
-    display: none;
-    /* removed margin-bottom */
-}
-body {
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-}
-
-.chat-body {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.messages-container {
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-/* Bold text is now black instead of green */
-.message-bubble strong {
-    color: #1a202c;
-    font-weight: 600;
-}
-
-/* Support for numbered lists */
-.message-bubble ol {
-    margin: 12px 0;
-    padding-left: 24px;
-}
-
-.nested-item {
-    margin-left: 20px;
-    margin-top: 4px;
-    font-size: 14px;
-}
-
-.shibu-circle {
-    width: 130px;
-    height: 100px;
-    border-radius: 50%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border: 4px solid #FDB913;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.shibu-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
