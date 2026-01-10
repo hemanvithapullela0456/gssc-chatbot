@@ -88,6 +88,21 @@ AI assistant that answers questions about NIT Jamshedpur using Retrieval‑Augme
 - **MongoDB** connection string (Atlas or self-hosted) if you want incremental ingestion and change tracking. Without it, the pipeline falls back to a legacy upsert path.
 - **Redis** (local or remote) if you want persistent caches. A local instance is enough for development; see `./docker-compose.yml`.
 
+### OCR Setup (Required for scanned PDFs)
+If you need to process scanned PDFs (that contain images of text instead of selectable text), you must install **Poppler** so the system can convert PDF pages to images for the OCR engine.
+
+We have provided a helper script to install this automatically on Windows:
+
+1. Open PowerShell as Administrator.
+2. Run the following command from the project root:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/install_poppler.ps1
+   ```
+   This will download portable Poppler binaries and place them in `scraper/bin/`, where the scraper will look for them.
+
+*(Note: The OCR engine itself uses `tesseract.js` which is bundled with the project, so no separate Tesseract installation is needed.)*
+
+
 
 ### Initial setup
 
