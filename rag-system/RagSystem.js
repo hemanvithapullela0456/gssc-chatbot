@@ -37,47 +37,48 @@ class JharkhandGovRAGSystem {
 
     async classifyQuery(question, language = "english") {
         const classificationPrompt = language === "hindi"
-            ? `आप एक सहायक हैं जो GSCC योजना के प्रश्नों को वर्गीकृत करता है।
-        
-नियम:
-1. वर्तनी की गलतियों को नजरअंदाज करें।
-2. केवल श्रेणी का नाम लौटाएं (जैसे: GSCC_SPECIFIC:FACT_LIST)।
+            ? `आप एक AI सहायक हैं जो GSCC योजना से संबंधित प्रश्नों को वर्गीकृत (classify) करता है।
 
-श्रेणियाँ:
-- GSCC_SPECIFIC:FACT_LIST -> सूचियाँ (दस्तावेज़, पात्रता criteria)
-- GSCC_SPECIFIC:FACT_VALUE -> एकल मान (ब्याज दर, आयु सीमा)
-- GSCC_SPECIFIC:PROCEDURE -> चरण (आवेदन कैसे करें)
-- GSCC_SPECIFIC:EXPLANATION -> स्पष्टीकरण (योजना क्या है, क्यों आवश्यक है)
-- GREETING -> नमस्ते, हाय
-- FOLLOWUP -> "और क्या?", "इसके बाद क्या?"
+**निर्देश:**
+1. वर्तनी (spelling) और व्याकरण की गलतियों को पूरी तरह नज़रअंदाज़ करें।
+2. उत्तर में केवल श्रेणी का नाम (Category Name) लिखें, और कुछ भी नहीं।
 
-उदाहरण:
-"ब्याज दर क्या है?" -> GSCC_SPECIFIC:FACT_VALUE
-"दस्तावेज़ों की सूची दें" -> GSCC_SPECIFIC:FACT_LIST
+**श्रेणियां (Categories):**
+- GSCC_SPECIFIC:FACT_LIST -> दस्तावेज़, पात्रता (eligibility), या समय-सीमा की सूची।
+- GSCC_SPECIFIC:FACT_VALUE -> कोई एक निश्चित संख्या या जानकारी (ब्याज दर, अधिकतम लोन, आयु सीमा)।
+- GSCC_SPECIFIC:PROCEDURE -> काम करने का तरीका या स्टेप-बाय-स्टेप गाइड (आवेदन कैसे करें)।
+- GSCC_SPECIFIC:EXPLANATION -> योजना के बारे में विस्तार से जानकारी या "क्यों" वाले प्रश्न।
+- GREETING -> नमस्ते, हाय, धन्यवाद।
+- FOLLOWUP -> पिछले सवाल से जुड़ा छोटा सवाल (जैसे: "और क्या?", "इसके बाद क्या करें?")।
+
+**उदाहरण (Examples):**
+- "जरूरी कागज कौन से हैं?" -> GSCC_SPECIFIC:FACT_LIST
+- "ब्याज कितना लगेगा?" -> GSCC_SPECIFIC:FACT_VALUE
+- "फॉर्म कैसे भरना है?" -> GSCC_SPECIFIC:PROCEDURE
+- "GSCC स्कीम क्या है और इसके फायदे क्या हैं?" -> GSCC_SPECIFIC:EXPLANATION
+- "नमस्ते" -> GREETING
 
 प्रश्न: "${question}"
 श्रेणी:`
-            : `Act as a query classifier for the GSCC scheme. 
+            : `Analyze this query for the GSCC scheme classification. Be extremely lenient with spelling and typos.
 
-INSTRUCTIONS:
-1. Be extremely lenient with spelling mistakes and typos.
-2. Return ONLY the category name. Do not include punctuation or explanations.
+**Categories:**
+- GSCC_SPECIFIC:FACT_LIST (Lists like docs, eligibility criteria, slabs)
+- GSCC_SPECIFIC:FACT_VALUE (Single values like max loan, interest rate, age limit)
+- GSCC_SPECIFIC:PROCEDURE (Step-by-step "how-to" processes)
+- GSCC_SPECIFIC:EXPLANATION (Conceptual questions, "why", "how it works")
+- GREETING (Hi, hello, thanks)
+- FOLLOWUP (Contextual continuation like "anything else?")
 
-CATEGORIES:
-- GSCC_SPECIFIC:FACT_LIST (Lists of documents, eligibility criteria, slabs)
-- GSCC_SPECIFIC:FACT_VALUE (Specific single values like max loan, age limit, rate)
-- GSCC_SPECIFIC:PROCEDURE (Step-by-step instructions on how to do something)
-- GSCC_SPECIFIC:EXPLANATION (Conceptual answers, "why" or "how it works")
-- GREETING (Casual talk, hello, thanks)
-- FOLLOWUP (Context-dependent follow-ups like "tell me more" or "anything else?")
+**Examples:**
+- "What docs are needed?" -> GSCC_SPECIFIC:FACT_LIST
+- "What's the max limit?" -> GSCC_SPECIFIC:FACT_VALUE
+- "How do I apply?" -> GSCC_SPECIFIC:PROCEDURE
+- "Explain the scheme" -> GSCC_SPECIFIC:EXPLANATION
 
-EXAMPLES:
-"What documents do I need?" -> GSCC_SPECIFIC:FACT_LIST
-"How do I apply?" -> GSCC_SPECIFIC:PROCEDURE
-"What is the interest rate?" -> GSCC_SPECIFIC:FACT_VALUE
-"What is GSCC?" -> GSCC_SPECIFIC:EXPLANATION
+Return ONLY the category name.
 
-USER QUERY: "${question}"
+QUERY: "${question}"
 CATEGORY:`;
 
 
@@ -137,26 +138,80 @@ CATEGORY:`;
     }
 
 
-    buildFocusedPrompt(question, context, history, language) {
-        const languageInstruction = language === 'hindi'
-            ? '\n\nIMPORTANT: केवल हिंदी में जवाब दें। सरल और स्पष्ट भाषा का उपयोग करें।'
-            : '\n\nIMPORTANT: Respond ONLY in English. Use clear, professional language.';
+//     buildFocusedPrompt(question, context, history, language) {
+//         const languageInstruction = language === 'hindi'
+//             ? '\n\nIMPORTANT: केवल हिंदी में जवाब दें। सरल और स्पष्ट भाषा का उपयोग करें।'
+//             : '\n\nIMPORTANT: Respond ONLY in English. Use clear, professional language.';
+//
+//         const historySection = this.formatConversationHistory(history);
+//
+//         return `You are an AI assistant for the Jharkhand GSCC Scheme.
+//
+// ${languageInstruction}
+//
+//
+// ### RULES:
+// 1. Answer ONLY using the provided context below
+// 2. Be VERY lenient with spelling mistakes - understand the intent even if words are misspelled
+// 3. Be concise - maximum 3 short paragraphs
+// 4. NEVER include document citations like "[PDF Document X: ...]" in your answer
+// 5. If the context doesn't contain the answer, say: "I don't have that specific information"
+// 6. Use bullet points ONLY for listing items (maximum 5-7 items)
+// 7. No greetings, no closings - just answer directly
+//
+// ${historySection ? '### PREVIOUS CONVERSATION:\n' + historySection + '\n' : ''}
+//
+// ### CONTEXT:
+// ${context}
+//
+// ### QUESTION:
+// ${question}
+//
+// Provide a direct, helpful answer based ONLY on the context above:`;
+//     }
 
+
+    buildFocusedPrompt(question, context, history, language) {
+        const languageConfig = {
+            hindi: {
+                instruction: 'IMPORTANT: केवल हिंदी में जवाब दें (Natural Hinglish)। "Interest Rate", "Loan" जैसे शब्दों का अंग्रेजी में उपयोग करें।',
+                rules: `
+                1. केवल नीचे दिए गए "CONTEXT" के आधार पर उत्तर दें।
+                2. वर्तनी की गलतियों को नजरअंदाज करें।
+                3. उत्तर संक्षिप्त रखें - अधिकतम 3 छोटे पैराग्राफ।
+                4. [PDF Document X] जैसे साइटेशन न लिखें।
+                5. यदि जवाब नहीं है, तो कहें: "क्षमा करें, मेरे पास यह जानकारी नहीं है।"
+                6. लिस्ट के लिए बुलेट पॉइंट्स का उपयोग करें (अधिकतम 5-7 आइटम)।
+                7. कोई Greeting या Closing न लिखें।
+                8. जानकारी को दोहराएं नहीं। यदि CONTEXT में एक ही बात बार-बार लिखी है, तो उसे उत्तर में केवल एक बार ही लिखें।
+            `,
+                fallback: 'Provide a direct answer in Hindi based ONLY on the context:'
+            },
+            english: {
+                instruction: 'IMPORTANT: Respond ONLY in English.',
+                rules: `
+                1. Answer ONLY using the provided context.
+                2. Be lenient with spelling mistakes.
+                3. Be concise - maximum 3 short paragraphs.
+                4. NEVER include document citations like "[PDF Document X]".
+                5. If information is missing, say: "I don't have that specific information."
+                6. Use bullet points for lists (max 5-7 items).
+                7. No greetings or closings.
+                8. DO NOT REPEAT information. If the context contains redundant points, consolidate them into one single clear bullet point.
+            `,
+                fallback: 'Provide a direct answer based ONLY on the context:'
+            }
+        };
+
+        const config = language === 'hindi' ? languageConfig.hindi : languageConfig.english;
         const historySection = this.formatConversationHistory(history);
 
         return `You are an AI assistant for the Jharkhand GSCC Scheme.
 
-${languageInstruction}
-
+${config.instruction}
 
 ### RULES:
-1. Answer ONLY using the provided context below
-2. Be VERY lenient with spelling mistakes - understand the intent even if words are misspelled 
-3. Be concise - maximum 3 short paragraphs
-4. NEVER include document citations like "[PDF Document X: ...]" in your answer
-5. If the context doesn't contain the answer, say: "I don't have that specific information"
-6. Use bullet points ONLY for listing items (maximum 5-7 items)
-7. No greetings, no closings - just answer directly
+${config.rules}
 
 ${historySection ? '### PREVIOUS CONVERSATION:\n' + historySection + '\n' : ''}
 
@@ -166,7 +221,7 @@ ${context}
 ### QUESTION:
 ${question}
 
-Provide a direct, helpful answer based ONLY on the context above:`;
+${config.fallback}`;
     }
 
 
