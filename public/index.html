@@ -106,7 +106,7 @@
     const API_BASE = (() => {
         if (typeof window !== 'undefined' && window.API_BASE) return window.API_BASE;
         if (location.hostname === '127.0.0.1') {
-            return 'http://localhost:5500';
+            return 'http://localhost:3001';
         }
         return '';
     })();
