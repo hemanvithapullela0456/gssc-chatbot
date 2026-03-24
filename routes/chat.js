@@ -1,5 +1,15 @@
 import { createRateLimiter } from '../rate-limiting/rateLimiter.js';
-import { getMessage, languageManager } from '../utils/language.js'
+import { getMessage, languageManager } from '../utils/language.js';
+import {
+    validateBody,
+    validateParams,
+    chatStreamSchema,
+    setLanguageSchema,
+    getLanguageSchema,
+    clearConversationSchema,
+} from '../utils/validation.js';
+import { ContextExtractor } from '../utils/contextExtractor.js';
+import { SimpleContextExtractor } from '../utils/simpleContextExtractor.js';
 
 /**
  * Extracts and validates chat response fields from the final response object.
@@ -18,32 +28,13 @@ function extractChatResponseFields(finalResponse) {
 
 
 export function setupChatRoutes(app, server) {
+    const contextExtractor = new ContextExtractor();
+    const simpleContextExtractor = new SimpleContextExtractor();
 
     // SET user's language preference
-    app.post('/set-language', async (req, res) => {
+    app.post('/set-language', validateBody(setLanguageSchema), async (req, res) => {
         try {
-            const { sessionId, language } = req.body;
-
-            if (!sessionId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Session ID is required'
-                });
-            }
-
-            if (!language) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Language is required'
-                });
-            }
-
-            if (!['english', 'hindi'].includes(language.toLowerCase())) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid language. Must be "english" or "hindi"'
-                });
-            }
+            const { sessionId, language } = req.validatedBody;
 
             const normalizedLanguage = language.toLowerCase();
 
@@ -70,16 +61,9 @@ export function setupChatRoutes(app, server) {
 
 
     // GET user's language preference
-    app.get('/get-language/:sessionId', async (req, res) => {
+    app.get('/get-language/:sessionId', validateParams(getLanguageSchema), async (req, res) => {
         try {
-            const { sessionId } = req.params;
-
-            if (!sessionId) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Session ID is required'
-                });
-            }
+            const { sessionId } = req.validatedParams;
 
             // Since language is managed client-side, we return a success response
             // In production, you'd retrieve this from Redis/MongoDB
@@ -95,6 +79,30 @@ export function setupChatRoutes(app, server) {
             res.status(500).json({
                 success: false,
                 error: error.message || 'Failed to get language'
+            });
+        }
+    });
+
+    // CLEAR conversation history + context + summary
+    app.post('/clear-conversation', validateBody(clearConversationSchema), async (req, res) => {
+        try {
+            const { sessionId } = req.validatedBody;
+
+            if (server.chatHistory) {
+                await server.chatHistory.clear(sessionId);
+                console.log(`[ChatHistory] Cleared conversation for session ${sessionId}`);
+            }
+
+            res.json({
+                success: true,
+                message: 'Conversation cleared successfully',
+                sessionId,
+            });
+        } catch (error) {
+            console.error('[clear-conversation] Error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message || 'Failed to clear conversation',
             });
         }
     });
@@ -117,16 +125,10 @@ export function setupChatRoutes(app, server) {
             }
             return server._chatRateLimiter(req, res, next);
         },
+        validateBody(chatStreamSchema),
 
         async (req, res) => {
-            const { question, sessionId: clientSessionId, language: clientLanguage } = req.body || {};
-
-            if (!question || question.trim().length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Question is required and cannot be empty'
-                });
-            }
+            const { question, sessionId: clientSessionId, language: clientLanguage } = req.validatedBody;
 
             const headerSessionId =
                 typeof req.headers['x-session-id'] === 'string' ? req.headers['x-session-id'] : undefined;
@@ -138,6 +140,31 @@ export function setupChatRoutes(app, server) {
             // Get language from request (client sends it with each request)
             const userLanguage = clientLanguage || 'english';
 
+            const extractedContext = contextExtractor.extractContext(question);
+            const fallbackContext = simpleContextExtractor.extractBasicInfo(question);
+            const mergedContext = {
+                ...(extractedContext || {}),
+                ...(fallbackContext || {}),
+            };
+
+            if (Object.keys(mergedContext).length > 0 && server.chatHistory) {
+                await server.chatHistory.updateUserContext(sessionId, mergedContext);
+                console.log(
+                    `[Context] Extracted and saved: ${JSON.stringify(mergedContext)} for session ${sessionId}`
+                );
+            }
+
+            const userContext = server.chatHistory ? await server.chatHistory.getUserContext(sessionId) : null;
+            const conversationSummary = server.chatHistory
+                ? await server.chatHistory.getSummary(sessionId)
+                : null;
+            const chatHistoryManager = server.chatHistory
+                ? {
+                    currentSessionId: sessionId,
+                    setSummary: async (sid, summary) => server.chatHistory.setSummary(sid, summary),
+                }
+                : null;
+
             if (languageManager.isLanguageChangeRequest(question)) {
                 console.log(`[chat-stream] Language change requested for session ${sessionId}`);
 
@@ -146,13 +173,6 @@ export function setupChatRoutes(app, server) {
                     requiresLanguageSelection: true,
                     sessionId: sessionId,
                     message: getMessage('languageSelection', 'bilingual')
-                });
-            }
-
-            if (!['english', 'hindi'].includes(userLanguage)) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid language parameter. Must be "english" or "hindi"'
                 });
             }
 
@@ -255,7 +275,9 @@ export function setupChatRoutes(app, server) {
             }
 
             try {
-                console.log(`[chat-stream] Processing question in ${userLanguage} for session ${sessionId} (history: ${history.length} messages)`);
+                console.log(
+                    `[chat-stream] Processing question in ${userLanguage} for session ${sessionId} (history: ${history.length} messages, summary: ${conversationSummary ? 'yes' : 'no'}, context: ${userContext ? 'yes' : 'no'})`
+                );
 
                 const finalResponse = await server.ragSystem.chatStream(
                     question,
@@ -266,7 +288,10 @@ export function setupChatRoutes(app, server) {
                         }
                     },
                     history,
-                    userLanguage
+                    userLanguage,
+                    userContext,
+                    conversationSummary,
+                    chatHistoryManager
                 );
 
                 const { answerText, sources, relevantLinks, confidence } =
