@@ -4,30 +4,10 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 
 export function setupMiddleware(app, __dirname) {
-    // CORS configuration
-    const allowedOrigins = process.env.NODE_ENV === 'production'
-        ? [
-            'https://gssc-chatbot-5fvd.onrender.com',
-            process.env.FRONTEND_URL,
-        ].filter(Boolean)
-        : [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'http://localhost:5500',
-            'http://127.0.0.1:5500',
-            'http://localhost:3001',
-            'http://127.0.0.1:3001',
-        ];
-
+    // CORS configuration - allow all origins in production since frontend is served from same domain
     app.use(
         cors({
-            origin: (origin, callback) => {
-                if (!origin || allowedOrigins.includes(origin)) {
-                    callback(null, true);
-                } else {
-                    callback(new Error('Not allowed by CORS'));
-                }
-            },
+            origin: true,
             credentials: true,
         })
     );
