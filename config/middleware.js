@@ -4,18 +4,10 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 
 export function setupMiddleware(app, __dirname) {
-    // CORS configuration
+    // CORS configuration - allow all origins in production since frontend is served from same domain
     app.use(
         cors({
-            origin:
-                process.env.NODE_ENV === 'production'
-                    ? ['https://yourdomain.com']
-                    : [
-                        'http://localhost:3000',
-                        'http://127.0.0.1:3000',
-                        'http://localhost:5500',
-                        'http://127.0.0.1:5500',
-                    ],
+            origin: true,
             credentials: true,
         })
     );
