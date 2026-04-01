@@ -38,7 +38,7 @@
 \contentsline {section}{\numberline {2.8}System Workflow}{18}{section.2.8}%
 \contentsline {subsection}{\numberline {2.8.1}Initial Setup Workflow}{18}{subsection.2.8.1}%
 \contentsline {subsection}{\numberline {2.8.2}Incremental Update Workflow}{18}{subsection.2.8.2}%
-\contentsline {subsection}{\numberline {2.8.3}Query Resolution Workflow}{19}{subsection.2.8.3}%
+\contentsline {subsection}{\numberline {2.8.3}Query Resolution Workflow}{18}{subsection.2.8.3}%
 \contentsline {section}{\numberline {2.9}API Endpoints and System Management}{19}{section.2.9}%
 \contentsline {chapter}{\numberline {3}Testing and Evaluation}{20}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Testing Methodology}{20}{section.3.1}%

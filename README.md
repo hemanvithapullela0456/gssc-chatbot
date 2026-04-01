@@ -271,7 +271,7 @@ curl -X POST http://localhost:3001/embed-latest \
 - Hemanvitha Pullela
 - Om Raj
 - Pritom Roy
-
+- H S Shivapreetham
 
 ### Turnitin assessment
 
