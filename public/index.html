@@ -32,7 +32,7 @@
     <!-- Body -->
     <div class="chat-body">
         <!-- Language Selection - COMMENTED OUT FOR ENGLISH ONLY -->
-        <!--
+        
         <div class="language-selection" id="languageSelection">
             <div class="language-icon">
                 <svg viewBox="0 0 24 24">
@@ -51,12 +51,12 @@
                 <button class="language-btn" onclick="selectLanguage('hindi')">हिंदी</button>
             </div>
         </div>
-        -->
+       
 
         <!-- Chat Messages -->
         <div class="chat-messages active" id="chatMessages">
             <!-- Language Toggle - COMMENTED OUT -->
-            <!--
+            
             <div class="language-toggle">
                 <button class="toggle-btn" onclick="changeLanguage()">
                     <svg viewBox="0 0 24 24">
@@ -70,7 +70,6 @@
                     <span id="toggleBtnText">Change Language</span>
                 </button>
             </div>
-            -->
             <div class="messages-container" id="messagesContainer"></div>
             <div class="typing-indicator" id="typingIndicator">
                 <div class="typing-bubble">
@@ -139,8 +138,7 @@
             placeholder: "Ask about GSCC scheme...",
             typing: "Thinking...",
             status: "Online"
-        }
-        /*
+        },
         hindi: {
             welcome: "झारखंड गुरुजी छात्र क्रेडिट कार्ड (GSCC) सहायक में आपका स्वागत है।\n\nमैं छात्रों और माता-पिता को छात्र क्रेडिट कार्ड योजना को समझने में मदद करने के लिए आधिकारिक सरकारी दस्तावेज़ीकरण पर प्रशिक्षित एक AI सहायक हूं।\n\nमैं आपकी इनमें सहायता कर सकता हूं:\n• क्रेडिट कार्ड के लिए पात्रता मानदंड\n• अधिकतम ऋण सीमा और ब्याज दरें\n• अनुमोदित बैंकों और संस्थानों की सूची\n• अनिवार्य दस्तावेज़ आवश्यकताएं\n• आवेदन प्रक्रिया और ट्रैकिंग\n• पुनर्भुगतान शर्तें और स्थगन अवधि\n\nकृपया GSCC झारखंड योजना के बारे में कोई भी प्रश्न पूछें।",
             changeLanguage: "भाषा बदलें",
@@ -148,7 +146,7 @@
             typing: "सहायक टाइप कर रहा है...",
             status: "ऑनलाइन"
         }
-        */
+
     };
 
     // DOM Elements
@@ -160,7 +158,7 @@
     const sendBtn = document.getElementById('sendBtn');
     const typingIndicator = document.getElementById('typingIndicator');
     const headerStatus = document.getElementById('headerStatus');
-    // const toggleBtnText = document.getElementById('toggleBtnText'); // Not needed
+    const toggleBtnText = document.getElementById('toggleBtnText'); // Not needed
 
     // Auto-start in English mode
     window.addEventListener('DOMContentLoaded', () => {
@@ -169,7 +167,6 @@
     });
 
     // Language Selection - COMMENTED OUT
-    /*
     function selectLanguage(lang) {
         currentLanguage = lang;
         languageSelection.classList.add('hidden');
@@ -183,10 +180,8 @@
         // Add welcome message
         addMessage('bot', translations[lang].welcome);
     }
-    */
 
     // Change Language - COMMENTED OUT
-    /*
     function changeLanguage() {
         currentLanguage = null;
         languageSelection.classList.remove('hidden');
@@ -194,7 +189,6 @@
         chatInputArea.classList.remove('active');
         messagesContainer.innerHTML = '';
     }
-    */
 
     // Format response text
     function formatResponse(text) {
